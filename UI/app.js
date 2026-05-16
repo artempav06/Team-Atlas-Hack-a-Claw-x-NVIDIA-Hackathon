@@ -271,6 +271,123 @@ const state = {
   currentMotion: ""
 };
 
+function slugify(value) {
+  return String(value || "event")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "event";
+}
+
+function clockFromDisplay(value) {
+  const match = String(value || "").match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+  if (!match) return "";
+  let hour = Number(match[1]);
+  const minute = Number(match[2] || "0");
+  const suffix = match[3].toUpperCase();
+  if (suffix === "PM" && hour !== 12) hour += 12;
+  if (suffix === "AM" && hour === 12) hour = 0;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function parseBackendTimeRange(value) {
+  const matches = [...String(value || "").matchAll(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/gi)];
+  if (matches.length >= 2) {
+    return [clockFromDisplay(matches[0][0]), clockFromDisplay(matches[1][0])];
+  }
+  if (matches.length === 1) {
+    const start = clockFromDisplay(matches[0][0]);
+    return [start, addClockMinutes(start, 60)];
+  }
+  return ["12:00", "13:00"];
+}
+
+function addClockMinutes(time, minutes) {
+  const [hour, minute] = String(time || "12:00").split(":").map(Number);
+  const total = (hour * 60 + minute + minutes) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function tagsFromBackend(value) {
+  if (Array.isArray(value)) return value.map(String).map((tag) => tag.trim().toLowerCase()).filter(Boolean);
+  return String(value || "")
+    .split(",")
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function categoryFromTags(tags) {
+  const joined = tags.join(" ");
+  if (joined.includes("career") || joined.includes("internship") || joined.includes("startup")) return "career";
+  if (joined.includes("ai") || joined.includes("research") || joined.includes("engineering")) return "academic";
+  if (joined.includes("music")) return "music";
+  if (joined.includes("wellness") || joined.includes("rest")) return "wellness";
+  if (joined.includes("nature") || joined.includes("hike") || joined.includes("outdoors")) return "nature";
+  if (joined.includes("art") || joined.includes("creative")) return "arts";
+  return "social";
+}
+
+function normalizeBackendEvent(event, index) {
+  const sourceInfo = typeof event.source === "object" && event.source ? event.source : {};
+  const [timeStart, timeEnd] = parseBackendTimeRange(event.time || event.time_text);
+  const parsedStart = event.start || event.start_time || timeStart;
+  const parsedEnd = event.end || event.end_time || timeEnd || addClockMinutes(parsedStart, 60);
+  const tags = tagsFromBackend(event.tags);
+  const category = event.category || categoryFromTags(tags);
+  const score = Number.isFinite(Number(event.score))
+    ? Number(event.score)
+    : Math.round(Number(event.confidence || 0.75) * 100);
+  const distanceMinutes = Number(event.distanceMinutes || (8 + index * 3));
+
+  return {
+    id: event.id || `backend-${slugify(event.title)}-${index}`,
+    title: event.title || "Campus event",
+    type: event.type || "real",
+    source: typeof event.source === "string"
+      ? event.source
+      : sourceInfo.channel_name || sourceInfo.type || "Campus Scout",
+    sourceUrl: event.sourceUrl || sourceInfo.url || "#",
+    date: event.date || todayIso,
+    start: parsedStart || "12:00",
+    end: parsedEnd || "13:00",
+    location: event.location || "Campus",
+    distance: event.distance || `${Math.max(0.2, Math.round((distanceMinutes / 20) * 10) / 10).toFixed(1)} mi`,
+    distanceMinutes,
+    summary: event.summary || event.description || "Clean event candidate returned by the Atlas backend.",
+    tags: tags.length ? tags : ["campus"],
+    category,
+    vibe: event.vibe || (category === "career" || category === "academic" ? "intellectual" : "social"),
+    cost: event.cost || "free",
+    score,
+    route: Array.isArray(event.route) && event.route.length
+      ? event.route
+      : [`Head toward ${event.location || "campus"}`, "Check the event source for final room details"],
+    imageHint: event.imageHint || `${event.title || "campus event"} in NVIDIA green pixel art`
+  };
+}
+
+async function loadBackendEventsIfAvailable() {
+  const endpoints = ["/api/scout/run"];
+  if (window.location.port && window.location.port !== "8080") {
+    endpoints.push("http://127.0.0.1:8080/api/scout/run");
+  }
+
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, { method: "POST" });
+      const contentType = response.headers.get("content-type") || "";
+      if (!response.ok || !contentType.includes("application/json")) continue;
+      const payload = await response.json();
+      if (!Array.isArray(payload.events) || payload.events.length === 0) continue;
+      state.allEvents = payload.events.map(normalizeBackendEvent);
+      state.learning = `Loaded ${state.allEvents.length} Campus Scout events from the backend.`;
+      return true;
+    } catch {
+      // Static-file mode is allowed; Atlas falls back to built-in demo cards.
+    }
+  }
+  return false;
+}
+
 function formatIsoDate(date) {
   const copy = new Date(date);
   copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
@@ -1399,13 +1516,14 @@ function bindEvents() {
   });
 }
 
-function boot() {
-  loadSession();
+async function boot() {
   bindEvents();
   $("#routeOverlay").hidden = true;
   $("#routingToggle").checked = false;
   $("#appShell").classList.remove("is-disabled");
   setUiDisabled(false);
+  await loadBackendEventsIfAvailable();
+  loadSession();
   buildQueue();
   render();
   $("#plannerScroll").scrollTop = 0;

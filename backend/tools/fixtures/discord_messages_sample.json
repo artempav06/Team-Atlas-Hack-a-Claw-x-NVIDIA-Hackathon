@@ -1,0 +1,52 @@
+{
+  "channels": [
+    {
+      "id": "111111111111111111",
+      "guild_id": "222222222222222222",
+      "name": "#campus-events",
+      "messages": [
+        {
+          "id": "333333333333333333",
+          "timestamp": "2026-05-15T22:30:00.000000+00:00",
+          "content": "**AI Systems Research Mixer** tonight 6:30pm-8:00pm at Engineering 2. Pizza provided. Come meet students working on robotics, LLMs, and NVIDIA projects!",
+          "attachments": [
+            {
+              "filename": "mixer.png",
+              "content_type": "image/png",
+              "url": "https://example.edu/mixer.png"
+            }
+          ],
+          "embeds": []
+        },
+        {
+          "id": "444444444444444444",
+          "timestamp": "2026-05-15T23:00:00.000000+00:00",
+          "content": "Board game night tomorrow at 7pm in College Nine lounge. snacks, social, casual hangout",
+          "attachments": [],
+          "embeds": []
+        },
+        {
+          "id": "555555555555555555",
+          "timestamp": "2026-05-15T23:15:00.000000+00:00",
+          "content": "anyone know if the dining hall is still open?",
+          "attachments": [],
+          "embeds": []
+        }
+      ]
+    },
+    {
+      "id": "999999999999999999",
+      "guild_id": "222222222222222222",
+      "name": "#career",
+      "messages": [
+        {
+          "id": "666666666666666666",
+          "timestamp": "2026-05-15T21:15:00.000000+00:00",
+          "content": "Career resume workshop 5/16 1pm-2:30pm Location: Baskin Engineering courtyard. Bring your laptop. Tags: internship, portfolio, recruiter feedback.",
+          "attachments": [],
+          "embeds": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "discord": {
+    "api_base": "https://discord.com/api/v10",
+    "token_env": "DISCORD_BOT_TOKEN",
+    "channel_ids_env": "DISCORD_CHANNEL_IDS",
+    "channel_ids": [],
+    "message_limit": 75
+  },
+  "scanner": {
+    "since_hours": 168,
+    "min_confidence": 0.45,
+    "max_tags": 6,
+    "keywords": [
+      "event",
+      "meeting",
+      "workshop",
+      "hackathon",
+      "mixer",
+      "party",
+      "social",
+      "study",
+      "career",
+      "internship",
+      "research",
+      "volunteer",
+      "food",
+      "music",
+      "beach",
+      "hike",
+      "game night"
+    ]
+  },
+  "output": {
+    "events_path": "data/discord_events.json",
+    "audit_path": "data/discord_scan_audit.json",
+    "short_term_memory_path": "memory/short_term.md"
+  }
+}

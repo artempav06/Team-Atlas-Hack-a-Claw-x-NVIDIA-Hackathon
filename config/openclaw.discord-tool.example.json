@@ -1,0 +1,13 @@
+{
+  "env": {
+    "DISCORD_BOT_TOKEN": "${DISCORD_BOT_TOKEN}",
+    "DISCORD_CHANNEL_IDS": "123456789012345678,987654321098765432"
+  },
+  "tools": [
+    {
+      "name": "discord_event_scanner",
+      "description": "Read approved Discord event channels and write cleaned Atlas event JSON. Read-only: no sends, reactions, deletes, or moderation actions.",
+      "command": "python backend/tools/discord_event_scanner.py --config config/discord_scanner.example.json"
+    }
+  ]
+}

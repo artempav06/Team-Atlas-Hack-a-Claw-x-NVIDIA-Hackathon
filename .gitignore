@@ -2,12 +2,31 @@
 .DS_Store
 .claude/
 
-# Secrets — never commit real keys
+# Build artifacts
+build/
+*.exe
+*.obj
+*.o
+
+# Local secrets and machine-specific config
 .env
 *.env.local
+*.local.json
+openclaw.local.json
 
-# Event cache — generated at runtime, not committed
+# Event cache and generated scanner outputs
 scraper/events/
+data/discord_events.json
+data/discord_scan_audit.json
+data/discord_events.sample.json
+data/discord_scan_audit.sample.json
 
-# Generated tracker — runtime file
+# Generated tracker
 scraper/generated-tracker.md
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Accidental local scratch folder from earlier UI/backend experiments
+atlas/backend/
