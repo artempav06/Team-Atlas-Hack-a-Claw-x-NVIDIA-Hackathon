@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Atlas</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell" id="appShell">
+      <header class="app-header">
+        <button class="brand-lockup" id="brandRefresh" type="button" title="Refresh Atlas">
+          <div class="brand-mark" aria-hidden="true">A</div>
+          <div>
+            <h1>Atlas</h1>
+            <p>Autonomous campus scout</p>
+          </div>
+        </button>
+        <!-- DEV FEATURES: session stats. Toggle in app.js DEV_FEATURES. -->
+        <div class="session-strip" data-dev-feature="session-status" aria-live="polite">
+          <span id="queueCount">0 cards ready</span>
+          <span id="memorySignal">Short-term mood: balanced</span>
+          <span id="planCount">0 accepted</span>
+        </div>
+      </header>
+
+      <main class="atlas-layout">
+        <section class="left-column" aria-label="Planner and controls">
+          <section class="planner-panel" id="plannerPanel" aria-label="Day planner">
+            <div class="panel-header planner-header">
+              <div>
+                <p class="eyebrow">Day planner</p>
+                <h2 id="plannerTitle">Today</h2>
+              </div>
+              <div class="planner-actions">
+                <button class="mini-button" id="travelToggle" type="button" aria-pressed="false">Travel</button>
+                <!-- DEV FEATURES: auto-fill planner. Toggle in app.js DEV_FEATURES. -->
+                <button class="mini-button" id="buildDayButton" data-dev-feature="build-day" type="button">Build My Day</button>
+                <button class="icon-button" id="fullscreenPlanner" type="button" title="Fullscreen planner" aria-label="Fullscreen planner">
+                  [ ]
+                </button>
+              </div>
+            </div>
+
+            <div class="planner-scroll" id="plannerScroll">
+              <div class="time-rail" id="timeRail" aria-hidden="true"></div>
+              <div class="planner-canvas" id="plannerCanvas">
+                <div class="planner-lines" id="plannerLines" aria-hidden="true"></div>
+                <div class="planner-blocks" id="plannerBlocks"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="controls-panel" aria-label="Filter and adjustment controls">
+            <div class="control-row filter-control">
+              <label class="check-label" for="filterToggle">
+                <input id="filterToggle" type="checkbox">
+                <span class="box-check" aria-hidden="true"></span>
+                <span>Filter</span>
+              </label>
+              <div class="tag-dropdown" id="tagDropdown" hidden>
+                <input id="tagSearch" type="search" placeholder="search tags" autocomplete="off">
+                <div class="tag-options" id="tagOptions"></div>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <label class="check-label" for="routingToggle">
+                <input id="routingToggle" type="checkbox">
+                <span class="box-check" aria-hidden="true"></span>
+                <span>Routing</span>
+              </label>
+              <p class="control-note" id="routeSummary">Estimate current route</p>
+            </div>
+
+            <div class="mood-panel">
+              <div class="mood-signals" id="moodSignals">
+                <span>balanced</span>
+              </div>
+              <form class="mood-form" id="moodForm">
+                <input id="moodInput" type="text" placeholder="in the mood for something chill?">
+                <button type="submit" title="Send mood signal">send</button>
+              </form>
+            </div>
+          </section>
+        </section>
+
+        <section class="deck-panel" aria-label="Event selection interface">
+          <div class="deck-toolbar">
+            <div>
+              <p class="eyebrow">Event selection</p>
+              <h2 id="currentDeckTitle">Curated and generated events</h2>
+            </div>
+            <!-- DEV FEATURES: session controls. Toggle in app.js DEV_FEATURES. -->
+            <div class="deck-actions" data-dev-feature="session-actions">
+              <button class="ghost-button" id="undoSwipe" type="button">Undo</button>
+              <button class="ghost-button" id="resetSession" type="button">Reset Session</button>
+            </div>
+          </div>
+
+          <div class="swipe-stage" id="swipeStage">
+            <button class="swipe-button reject-button" id="rejectButton" type="button" title="Reject event" aria-label="Reject event">&lt;</button>
+
+            <div class="card-stack" id="cardStack" aria-live="polite">
+              <article class="event-card" id="eventCard"></article>
+              <article class="stack-shadow shadow-one" aria-hidden="true"></article>
+              <article class="stack-shadow shadow-two" aria-hidden="true"></article>
+            </div>
+
+            <button class="swipe-button accept-button" id="acceptButton" type="button" title="Accept event" aria-label="Accept event">&gt;</button>
+            <div class="conflict-notice" id="conflictNotice" hidden></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="route-overlay" id="routeOverlay" hidden>
+      <section class="route-popup" role="dialog" aria-modal="true" aria-labelledby="routeTitle">
+        <button class="route-close" id="routeClose" type="button" data-route-control aria-label="Close route">x</button>
+        <p class="eyebrow">Routing</p>
+        <h2 id="routeTitle">Route preview</h2>
+        <div class="route-map" id="routeMap" aria-hidden="true">
+          <div class="route-node start-node">you</div>
+          <div class="route-road"></div>
+          <div class="route-node end-node">event</div>
+        </div>
+        <div class="route-details" id="routeDetails"></div>
+      </section>
+    </div>
+
+    <div class="modal-overlay" id="plannerEventOverlay" hidden>
+      <section class="event-modal" role="dialog" aria-modal="true" aria-labelledby="plannerEventTitle">
+        <button class="modal-close" id="plannerEventClose" type="button" aria-label="Close event">x</button>
+        <div id="plannerEventCard"></div>
+        <div class="modal-actions">
+          <button class="danger-button" id="deletePlannerEvent" type="button">Delete</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-overlay" id="errorOverlay" hidden>
+      <section class="error-modal" role="alertdialog" aria-modal="true">
+        <p class="eyebrow">Error</p>
+        <h2>Error: too many events at once</h2>
+        <p id="errorMessage">Press anything to continue.</p>
+      </section>
+    </div>
+
+    <!-- DEV FEATURES: generated suggestion rationale. Toggle in app.js DEV_FEATURES. -->
+    <div class="modal-overlay" id="suggestionOverlay" hidden>
+      <section class="error-modal" role="dialog" aria-modal="true" aria-labelledby="suggestionTitle">
+        <button class="modal-close" id="suggestionClose" type="button" aria-label="Close suggestion reasoning">x</button>
+        <p class="eyebrow">Atlas Suggestion</p>
+        <h2 id="suggestionTitle">Why this card?</h2>
+        <div id="suggestionBody"></div>
+      </section>
+    </div>
+
+    <!-- DEV FEATURES: one-click itinerary builder. Toggle in app.js DEV_FEATURES. -->
+    <div class="modal-overlay" id="buildDayOverlay" hidden>
+      <section class="error-modal" role="dialog" aria-modal="true" aria-labelledby="buildDayTitle">
+        <button class="modal-close" id="buildDayClose" type="button" aria-label="Close build my day">x</button>
+        <p class="eyebrow">Build My Day</p>
+        <h2 id="buildDayTitle">Choose a planning style</h2>
+        <div class="build-options">
+          <button type="button" data-build-mode="chill">Chill</button>
+          <button type="button" data-build-mode="balanced">Balanced</button>
+          <button type="button" data-build-mode="adventurous">Adventurous</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="poster-tooltip" id="posterTooltip" hidden></aside>
+
+    <script src="app.js"></script>
+  </body>
+</html>
