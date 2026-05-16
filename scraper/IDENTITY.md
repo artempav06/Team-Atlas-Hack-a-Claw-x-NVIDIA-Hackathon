@@ -7,7 +7,7 @@
 - **Version:** 1.0.0
 - **Creator:** Artem Pavlov
 - **Project:** Hack-a-Claw x NVIDIA Hackathon
-- **Runtime:** NemoClaw (OpenClaw + NVIDIA Nemotron 3 Super 49B)
+- **Runtime:** NemoClaw (OpenClaw + NVIDIA Nemotron 3 Super 120B)
 - **Hardware:** NVIDIA DGX Spark (GB10 Grace Blackwell Superchip)
 - **Partner Agent:** Atlas (user-facing concierge)
 - **User Interaction:** None. Fully background. Zero user-facing output.

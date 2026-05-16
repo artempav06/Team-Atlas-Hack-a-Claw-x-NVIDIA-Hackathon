@@ -198,14 +198,83 @@ This file defines every tool you have access to, when to use each one, when NOT 
 
 ---
 
+## telegram_send
+
+**What it does:** Sends a message to the user via Telegram bot. Supports text formatting (HTML parse mode), inline keyboard buttons, message editing, and photo sending.
+
+**When to use:**
+- Delivering event cards during swipe sessions (formatted message + inline buttons)
+- Sending calendar summaries and day plans
+- Pushing proactive suggestions (schedule-aware recommendations)
+- Sending urgent alerts (free food radar)
+- Delivering morning briefings
+- Sending event reminders (30 min before)
+- Any output that the user should see on their phone
+
+**When NOT to use:**
+- Internal processing (scoring, planning logic) — that stays silent
+- Communicating with Scraper agent — use message_agent for that
+- When Canvas is the active output mode for a swipe session
+
+**Patterns:**
+- Use HTML parse mode for formatting: `<b>bold</b>`, `<i>italic</i>`, `<code>mono</code>`
+- Include inline keyboards for actions (swipe buttons, approve/reject, toggles)
+- EDIT previous messages when updating cards (don't flood chat with old cards)
+- Send NEW messages for proactive pushes, alerts, and new contexts
+- Include Google Maps links for location-based events: `https://maps.google.com/?daddr=ADDRESS`
+- Callback data format: `action:context:data` (e.g., `swipe:accept:event_123`)
+
+**Message throttling:**
+- Never send more than 3 unprompted messages in a row
+- Minimum 2 minutes between proactive pushes
+- Morning briefing: 1 per day max
+- Food alerts: 3 per day max
+- Respect quiet hours (1AM-8AM default, user-configurable)
+
+**Common mistakes to avoid:**
+- Don't send a new message for every swipe card — edit the previous one
+- Don't format messages as giant walls of text — short, scannable, generous line breaks
+- Don't forget inline keyboards — text-only messages with no actions feel dead
+- Don't send raw URLs — always wrap in `<a href="url">readable text</a>`
+
+---
+
+## telegram_listen
+
+**What it does:** Receives incoming messages and callback queries from the user via Telegram. Returns the user's text input or button tap data.
+
+**When to use:**
+- Receiving swipe decisions (callback queries from inline buttons)
+- Receiving text commands (/swipe, /plan, /tonight, /food, /party)
+- Receiving natural language input (mood text, filter text, freeform questions)
+- Receiving settings changes
+
+**When NOT to use:**
+- You don't "call" this tool actively — it fires when user input arrives
+- Don't poll repeatedly — it's event-driven
+
+**Patterns:**
+- Callback queries arrive as `action:context:data` — parse and route to appropriate skill
+- Text messages are natural language — parse intent same as chat input
+- Commands (starting with /) map directly to mode triggers (see telegram-ui skill)
+- If input is ambiguous, ask a clarifying question with inline button options
+
+**Common mistakes to avoid:**
+- Don't ignore callback queries — always acknowledge button taps (even if just editing the message)
+- Don't treat every text message as a command — some are natural conversation in IDLE mode
+- Don't forget session state — if user is mid-swipe and types text, it might be a mood/filter input, not a new command
+
+---
+
 ## Tool Priority by Mode
 
 | Mode | Primary tools | Secondary tools |
 |------|--------------|----------------|
-| IDLE | file_read, web_search | web_fetch, message_agent |
-| SWIPING | canvas, file_read, run_code | message_agent, web_search |
-| PLANNING | run_code, canvas, file_read | file_write, web_search |
-| ROUTING | canvas, run_code | web_fetch |
+| IDLE | file_read, web_search, telegram_send | web_fetch, message_agent |
+| SWIPING | telegram_send (or canvas), file_read, run_code | message_agent, web_search |
+| PLANNING | run_code, telegram_send (or canvas), file_read | file_write, web_search |
+| ROUTING | telegram_send (or canvas), run_code | web_fetch |
+| Proactive push | telegram_send, file_read, run_code | message_agent |
 | Session end | file_write | message_agent |
 
 ---

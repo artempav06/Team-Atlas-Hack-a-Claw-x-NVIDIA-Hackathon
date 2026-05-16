@@ -39,9 +39,9 @@ They communicate through shared event cache files and direct messages. Atlas rea
 
 | Component | What it is |
 |-----------|-----------|
-| **Runtime** | NemoClaw (OpenClaw + NVIDIA Nemotron 3 Super 49B) |
+| **Runtime** | NemoClaw (OpenClaw + NVIDIA Nemotron 3 Super 120B) |
 | **Hardware** | NVIDIA DGX Spark (GB10 Grace Blackwell Superchip) |
-| **Model** | nvidia/llama-3.3-nemotron-super-49b-v1 (1M context, 12B active params) |
+| **Model** | nvidia/llama-3.3-nemotron-super-120b-v1 (1M context, 12B active params) |
 | **Agent Framework** | OpenClaw (workspace-based AI agent gateway) |
 | **UI Delivery** | OpenClaw Canvas (pushes HTML/CSS/JS to paired devices) |
 | **Maps** | Leaflet.js + OpenStreetMap (for routing popup) |
