@@ -44,8 +44,7 @@
         "atlas/skills/day-planner",
         "atlas/skills/route-planner",
         "atlas/skills/map-renderer",
-        "atlas/skills/quick-filters",
-        "atlas/skills/telegram-ui"
+        "atlas/skills/quick-filters"
       ],
       "tools_enabled": [
         "canvas",
@@ -54,9 +53,7 @@
         "file_read",
         "file_write",
         "run_code",
-        "message_agent",
-        "telegram_send",
-        "telegram_listen"
+        "message_agent"
       ],
       "can_message": ["scraper"],
       "receives_messages_from": ["scraper"],
@@ -140,7 +137,6 @@
 
   "environment": {
     "NVIDIA_API_KEY": "${NVIDIA_API_KEY}",
-    "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
     "DISCORD_BOT_TOKEN": "${DISCORD_BOT_TOKEN}",
     "EMAIL_ADDRESS": "${EMAIL_ADDRESS}",
     "EMAIL_APP_PASSWORD": "${EMAIL_APP_PASSWORD}"

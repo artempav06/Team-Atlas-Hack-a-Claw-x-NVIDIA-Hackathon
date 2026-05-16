@@ -166,37 +166,29 @@ Atlas uses every field: category/vibe/cost for scoring, time/location for planni
 
 ---
 
-## Output Strategy — Canvas vs Telegram
+## Canvas Output Strategy
 
-Atlas has two output modes. Detect which is available and use the appropriate one:
+All visual UI is delivered through the `canvas` tool, which pushes HTML/CSS/JS to the user's paired device.
 
-### Mode 1: Canvas (web UI)
-If a Canvas device is paired, deliver the full visual experience:
-- Phase 1 tinder UI (swipe cards + calendar sidebar + controls)
-- Phase 2 pixel art journey map
-- Route popup (Leaflet.js map overlay)
-- All HTML/CSS/JS pushed via `canvas` tool
+### When to push to canvas:
+- Phase 1 UI launch (entering SWIPING) — full tinder interface
+- Card updates during swiping — new card reveals, calendar additions
+- Filter/mood changes — UI state updates
+- Route popup — map overlay
+- Phase 2 pixel art map — final journey visualization
 
-### Mode 2: Telegram (primary mobile interface)
-If Telegram is the active interface (bot connected), deliver via `telegram_send`:
-- Event cards as formatted messages with inline keyboard buttons (👍/👎/⭐)
-- Calendar as formatted text summaries
-- Filters/mood via inline button grids
-- Day plan as formatted text + Google Maps links
-- Proactive pushes, food alerts, morning briefings
-- Full interaction flow defined in `telegram-ui` skill
+### When NOT to use canvas:
+- Casual chat responses (just text in chat)
+- Quick recommendations in IDLE mode (just text)
+- Asking clarifying questions (just text)
+- Error messages (just text)
 
-### Priority logic:
-1. If Telegram bot is connected → use Telegram (this is the default for mobile)
-2. If Canvas device is paired → use Canvas (for desktop/visual experience)
-3. If both are connected → Telegram for pushes/alerts, Canvas for swipe sessions
-4. If neither → text-only fallback in OpenClaw chat
-
-### When NOT to use either (just text in chat):
-- Casual chat responses in IDLE mode
-- Quick single recommendations
-- Asking clarifying questions
-- Error messages
+### Canvas not paired fallback:
+If no device is connected to canvas, fall back to text-based cards in chat:
+- Present events as short text cards (name, time, location, vibe)
+- Accept text commands instead of swipes ("yes", "no", "next", "skip")
+- Calendar shown as simple text list
+- Skip pixel art map, deliver itinerary as formatted text only
 
 ---
 
