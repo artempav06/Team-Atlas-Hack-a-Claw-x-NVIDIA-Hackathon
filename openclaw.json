@@ -1,0 +1,233 @@
+{
+  "project": {
+    "name": "Atlas — UCSC Lifestyle Concierge",
+    "version": "1.0.0",
+    "description": "Real-time lifestyle and entertainment concierge for UC Santa Cruz students. Two-agent architecture: Atlas (user-facing) and Atlas Scout (background scraper).",
+    "creator": "Artem Pavlov",
+    "hackathon": "Hack-a-Claw x NVIDIA Hackathon",
+    "runtime": "NemoClaw (OpenClaw + NVIDIA Nemotron 3 Super)"
+  },
+
+  "model": {
+    "provider": "nvidia",
+    "model_id": "nvidia/llama-3.3-nemotron-super-49b-v1",
+    "endpoint": "https://integrate.api.nvidia.com/v1",
+    "api_key_env": "NVIDIA_API_KEY",
+    "parameters": {
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "max_tokens": 4096,
+      "context_window": 131072,
+      "stop_sequences": []
+    }
+  },
+
+  "agents": {
+    "atlas": {
+      "name": "Atlas",
+      "description": "User-facing lifestyle concierge. Handles discovery, planning, and visualization.",
+      "workspace": "./atlas",
+      "entry_point": "user",
+      "files": {
+        "soul": "atlas/SOUL.md",
+        "agents": "atlas/AGENTS.md",
+        "tools": "atlas/TOOLS.md",
+        "identity": "atlas/IDENTITY.md",
+        "heartbeat": "atlas/HEARTBEAT.md",
+        "memory": "atlas/MEMORY.md",
+        "user": "atlas/USER.md",
+        "bootstrap": "atlas/BOOTSTRAP.md"
+      },
+      "skills": [
+        "atlas/skills/memory-curator",
+        "atlas/skills/event-curator",
+        "atlas/skills/day-planner",
+        "atlas/skills/route-planner",
+        "atlas/skills/map-renderer",
+        "atlas/skills/quick-filters"
+      ],
+      "tools_enabled": [
+        "canvas",
+        "web_search",
+        "web_fetch",
+        "file_read",
+        "file_write",
+        "run_code",
+        "message_agent"
+      ],
+      "can_message": ["scraper"],
+      "receives_messages_from": ["scraper"],
+      "canvas_enabled": true
+    },
+
+    "scraper": {
+      "name": "Atlas Scout",
+      "description": "Background autonomous scraper. Collects, classifies, and caches event data.",
+      "workspace": "./scraper",
+      "entry_point": "schedule",
+      "files": {
+        "soul": "scraper/SOUL.md",
+        "agents": "scraper/AGENTS.md",
+        "tools": "scraper/TOOLS.md",
+        "identity": "scraper/IDENTITY.md",
+        "heartbeat": "scraper/HEARTBEAT.md",
+        "memory": "scraper/MEMORY.md"
+      },
+      "skills": [
+        "scraper/skills/event-scraper",
+        "scraper/skills/event-generator"
+      ],
+      "tools_enabled": [
+        "web_search",
+        "web_fetch",
+        "file_read",
+        "file_write",
+        "run_code",
+        "message_agent"
+      ],
+      "can_message": ["atlas"],
+      "receives_messages_from": ["atlas"],
+      "canvas_enabled": false
+    }
+  },
+
+  "inter_agent": {
+    "messaging": {
+      "enabled": true,
+      "protocol": "direct",
+      "message_format": "plain_text",
+      "max_message_length": 200,
+      "queue_messages_when_inactive": true
+    },
+    "shared_filesystem": {
+      "enabled": true,
+      "shared_paths": [
+        "scraper/events/",
+        "atlas/USER.md"
+      ],
+      "permissions": {
+        "atlas": {
+          "scraper/events/": "read",
+          "atlas/USER.md": "read_write"
+        },
+        "scraper": {
+          "scraper/events/": "read_write",
+          "atlas/USER.md": "read"
+        }
+      }
+    }
+  },
+
+  "schedule": {
+    "atlas": {
+      "type": "on_demand",
+      "heartbeat_interval": "60m",
+      "active_hours": "7:00-1:00",
+      "silent_hours": "1:00-7:00"
+    },
+    "scraper": {
+      "type": "scheduled",
+      "cycle_interval": "60m",
+      "full_scan": "6:30",
+      "active_hours": "6:30-1:00",
+      "silent_hours": "1:00-6:30",
+      "tier2_frequency": "every_other_cycle"
+    }
+  },
+
+  "environment": {
+    "NVIDIA_API_KEY": "${NVIDIA_API_KEY}",
+    "DISCORD_BOT_TOKEN": "${DISCORD_BOT_TOKEN}",
+    "EMAIL_ADDRESS": "${EMAIL_ADDRESS}",
+    "EMAIL_APP_PASSWORD": "${EMAIL_APP_PASSWORD}"
+  },
+
+  "canvas": {
+    "enabled": true,
+    "target": "paired_device",
+    "fallback": "text_in_chat",
+    "supported_content": ["html", "css", "javascript"],
+    "max_payload_size": "500kb"
+  },
+
+  "memory": {
+    "atlas": {
+      "user_file": "atlas/USER.md",
+      "memory_file": "atlas/MEMORY.md",
+      "max_user_size": 4000,
+      "max_memory_size": 6000,
+      "consolidation_threshold": 5500
+    },
+    "scraper": {
+      "memory_file": "scraper/MEMORY.md",
+      "max_memory_size": 6000,
+      "consolidation_threshold": 5000,
+      "generated_tracker": "scraper/generated-tracker.md"
+    }
+  },
+
+  "event_cache": {
+    "directory": "scraper/events/",
+    "file_format": "YYYY-MM-DD.md",
+    "retention_days": 4,
+    "min_events_threshold": 5,
+    "fields_required": [
+      "name",
+      "date",
+      "time",
+      "location",
+      "category",
+      "vibe",
+      "cost",
+      "source",
+      "type",
+      "description",
+      "image_prompt"
+    ],
+    "categories": ["food", "music", "art", "sports", "nature", "social", "academic", "nightlife", "wellness"],
+    "vibes": ["chill", "energetic", "social", "intellectual", "adventurous"],
+    "types": ["real", "generated"]
+  },
+
+  "scoring": {
+    "dimensions": {
+      "time_fit": { "max": 3, "weight": 1.0 },
+      "proximity": { "max": 2, "weight": 1.0 },
+      "category_match": { "max": 2, "weight": 1.0 },
+      "vibe_match": { "max": 1, "weight": 1.0 },
+      "budget_match": { "max": 2, "weight": 1.0 }
+    },
+    "max_score": 10,
+    "minimum_display_threshold": 3,
+    "urgency_bonus": 1,
+    "free_event_bonus": 0.5
+  },
+
+  "sources": {
+    "instagram_accounts": "scraper/sources/instagram-accounts.md",
+    "websites": "scraper/sources/websites.md",
+    "discord_channels": "scraper/sources/discord-channels.md",
+    "newsletters": "scraper/sources/newsletters.md"
+  },
+
+  "limits": {
+    "max_cycle_time_seconds": 900,
+    "max_source_time_seconds": 300,
+    "max_cards_in_queue": 50,
+    "max_events_per_day_file": 100,
+    "max_generated_per_batch": 15,
+    "max_messages_per_cycle": 3,
+    "discord_messages_per_channel": 50,
+    "email_max_unread_process": 20
+  },
+
+  "deployment": {
+    "platform": "NVIDIA DGX Spark",
+    "chip": "GB10 Grace Blackwell Superchip",
+    "os": "DGX OS (Ubuntu-based)",
+    "install_path": "~/.openclaw/workspace/",
+    "startup_command": "openclaw start",
+    "auto_start_scraper": true,
+    "log_level": "info"
+  }
+}

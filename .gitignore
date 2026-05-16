@@ -1,1 +1,13 @@
+# OS files
 .DS_Store
+.claude/
+
+# Secrets — never commit real keys
+.env
+*.env.local
+
+# Event cache — generated at runtime, not committed
+scraper/events/
+
+# Generated tracker — runtime file
+scraper/generated-tracker.md
